@@ -40,3 +40,31 @@ go: creating new go.mod: module hello_world
 - You shouldn't edit the `go.mod` file directly. Instead,
   use `go get` and `go mod tidy` commands to manage changes
   to the file.
+
+Go enforces a standard format:
+```
+$ go fmt ./...
+```
+- Go programs use tabs to indent.
+- It is a syntax error if the opening brace is not on the same line as the
+  declaration or command that begins the block.
+- Remember to run `go fnt` before you compile your code, and, at the very
+  least, before you commit source code changes to your repo.
+  If you forget, **make a separate commit** that does _only_ `go fmt ./...`
+  so you don't hide logic changes in an avalanche of formatting changes.
+
+> [!NOTE]
+> GO requires a semicolon at the end of every statement. 
+> However, **Go developers should never put the semicolons in themselves.**
+> The Go compiler adds them automatically, following a simple rule described
+> in Effective Go (https://oreil.ly/hTOHU).
+
+Just as you should run `go fmt` to make sure your code is formatted properly,
+run `go vet` to scan for possible bugs in valid code:
+```
+$ go vet ./...
+```
+- All Go developers should read through Effective Go (https://oreil.ly/hTOHU)
+  and the Code Review Comments page on Go's wiki (https://oreil.ly/FHi_h) to
+  understand what idiomatic Go code looks like.
+
