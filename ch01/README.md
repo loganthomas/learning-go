@@ -26,7 +26,6 @@ All of the Go development tools are accessed via the `go` command:
 > For modern Go development, the rule is simple: you are free to organize
 > your projects as you see fit and store them anywhere you want.
 
-## Personal Notes
 To create a new module:
 ```
 $ go mod init hello_world
@@ -68,3 +67,48 @@ $ go vet ./...
   and the Code Review Comments page on Go's wiki (https://oreil.ly/FHi_h) to
   understand what idiomatic Go code looks like.
 
+## Makefiles
+Go developers have adopted `make` as their standard practice.
+- It lets developers specify a set of operations (within `Makefile`)
+  that are necessary to build a program and the order in which the steps
+  must be preformed.
+- Example:
+```
+.DEFAULT_GOAL := build
+
+.PHONY: fmt vet build
+fmt:
+        go fmt ./...
+
+vet: fmt
+        go vet ./...
+
+build: vet
+        go build
+```
+- Each possible operation is called a _target_.
+- The `DEFAULT_GOAL` defines which target is run when no target is specified.
+- The word before the colon (`:`) is the name of the target.
+- Any words after the target (like `vet` in the line `build: vet`) are the other
+  targets that must be run before the specified target runs.
+- The tasks that are performed by the target are on the indented lines after the
+  target.
+- The `.PHONY` line keeps `make` from getting confused if a directory or file
+  in your project has thee same name as one of the listed targets.
+
+Run `make` and you should see the following output:
+```
+$ make
+go fmt ./...
+go vet ./...
+go build
+```
+
+## Staying Up-to-Date
+Go programs compile to a standalone native binary, so you don't need to worry
+that updating your development environment could cause your currently deployed
+programs to fail.
+- You can have programs compiled with different versions of Go running
+  simultaneously on the same computer or virtual machine.
+- When updating with the installers on https://golang.org/dl, you can download
+  the latest installer, which removes the old version when it installs the new one.
