@@ -2,7 +2,7 @@
 
 ## Installing the Go Tools
 - https://go.dev/dl/
-    - Apple macOS (x86-64): https://go.dev/dl/go1.24.0.darwin-amd64.pkg
+- Apple macOS (x86-64): https://go.dev/dl/go1.24.0.darwin-amd64.pkg
 ```
 $ go version
 go version go1.24.0 darwin/amd64
@@ -15,6 +15,8 @@ All of the Go development tools are accessed via the `go` command:
 - `go mod`: dependency manager
 - `go test`: test runner
 - `go vet`: tool to scan for common coding mistakes
+- Go command documentation (https://oreil.ly/uqsMy)
+- `go clean`: remove object files from package source directories
 
 > [!NOTE]
 > Since the introduction of Go in 2009, several changes have occurred
