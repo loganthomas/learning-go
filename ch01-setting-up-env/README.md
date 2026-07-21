@@ -1,5 +1,18 @@
 # Chapter 1: Setting Up Your  Go Environment
 
+> [!IMPORTANT]
+> My personal reminders:
+> - Using `./...` tells a Go tool to apply the command to all the files
+>   in the current directory and all subdirectories.
+> - If you see a trailing `%` with a print statement, its from the shell (zsh).
+>   When a program's output doesn't end with a newline, zsh displays an inverse `%`
+>   to indicate "this output didn't end with a newline character."
+>   It's a visual hint from the shell. The fix: add `\n` at the end of your `Printf` calls.
+>   Or, use `fmt.Println` which automatically adds a new line but doesn't support format verbs (`%s`, `%d`, etc.)
+>   Or, use `fmt.Sprintf` with `fmt.Println`: `fmt.Println(fmt.Sprintf("Hello, %s", "world!"))  // Hello, world!\n`
+>   (but this is discouraged! Warning message in editor:
+    `hello.go|9 col 2-49 warning| [S1038] should use fmt.Printf instead of fmt.Println(fmt.Sprintf(...)) (but don't forget the newline)`)
+
 ## Installing the Go Tools
 - https://go.dev/dl/
 - Apple macOS (x86-64): https://go.dev/dl/go1.24.0.darwin-amd64.pkg
