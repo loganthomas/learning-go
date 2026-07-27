@@ -12,6 +12,11 @@
 >   Or, use `fmt.Sprintf` with `fmt.Println`: `fmt.Println(fmt.Sprintf("Hello, %s", "world!"))  // Hello, world!\n`
 >   (but this is discouraged! Warning message in editor:
     `hello.go|9 col 2-49 warning| [S1038] should use fmt.Printf instead of fmt.Println(fmt.Sprintf(...)) (but don't forget the newline)`)
+> - Run a `.go` file directly:
+>     - `go run myfile.go` will run directly without compiling to a binary
+>     - `go build myfile.go` and then `./myfile` will compile and then run the binary
+> - Use `go build -o bin/myproject` to compile to a `bin` directory that can easily be ignored by git.
+
 
 ## Installing the Go Tools
 - https://go.dev/dl/

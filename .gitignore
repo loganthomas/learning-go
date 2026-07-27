@@ -63,3 +63,8 @@ Temporary Items
 # *
 # !/**/
 # !*.*
+
+# Build output
+**/bin/
+**/build/
+
