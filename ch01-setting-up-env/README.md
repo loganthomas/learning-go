@@ -26,6 +26,17 @@ $ go version
 go version go1.24.0 darwin/amd64
 ```
 
+## The Go Runtime
+Every high-level language relies on a set of libraries to enable programs written in that language to rune, and Go is no exception.
+The Go runtime provides services like memory allocation and garbage collection, concurrency support, networking, and implementations
+of built-in types and functions.
+
+The Go runtime is compiled into every Go binary. This is different from languages that use a virtual machine,
+which must be installed separately to allow programs written in those languages to function.
+Including the runtime in the binary makes it easier to distribute Go programs and avoids worries about compatibility issues
+between the runtime and the program. The drawback of including the runtime in the binary is that even the simplest Go program
+produces a binary that's about 2 MB.
+
 ## Go Tooling
 All of the Go development tools are accessed via the `go` command:
 - `go build`: compiler
