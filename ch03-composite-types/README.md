@@ -21,30 +21,59 @@
 >   If you do this with a constant of literal index, it is a compile-time error.
 >   An out-of-bounds read or write with a variable index compiles but fails at rune time with a panic.
 > - When defining an array and no values are specified, the values will take on the zero value for the declared type.
-    When defining a slice and no values are specified (no length by defn), the values will take on the zero value for the slice
-    which is `nil`.
+>   When defining a slice and no values are specified (no length by defn), the values will take on the zero value for the slice
+>   which is `nil`.
 > - In Go, `nil` is an identifier that represents the lack of a value for some types. `nil` has no type, so it can be
 >   assigned or compared against values of different types. A `nil` slice contains nothing.
 > - A slice is not comparable. It is a compile-time error to use `==` to see if two slices are identical
 >   or `!=` to see if they are different. The only thing you can compare a slice with using `==` is `nil`.
 >   Use `slices.Equal` or `slices.EqualFunc` instead.
 > - `append` does not modify the original slice, it returns a new one. **Go is pass-by-value** (give a copy not the original).
-    **Python is pass-by-assignment** or pass-by-object-reference (reference to the same object, not a copy).
-    Said differently, Go is a _call-by-value_ language. Every time you pass a parameter to a function,
-    Go makes a copy of the value that's passed in. Passing a slice to the `append` function actually passes _a copy_ of the slice
-    to the function.
+>   **Python is pass-by-assignment** or pass-by-object-reference (reference to the same object, not a copy).
+>   Said differently, Go is a _call-by-value_ language. Every time you pass a parameter to a function,
+>   Go makes a copy of the value that's passed in. Passing a slice to the `append` function actually passes _a copy_ of the slice
+>   to the function.
 > - Just as the built-in `len` function returns the current length of a slice, the built-in `cap` function returns the current
-  capacity of a slice. It is used far less frequently than `len`. Most of the time, `cap` is used to check if a slice is large
-  enough to hold new data, or if a call to `make` is needed to crate a new slice.
+>   capacity of a slice. It is used far less frequently than `len`. Most of the time, `cap` is used to check if a slice is large
+>   enough to hold new data, or if a call to `make` is needed to crate a new slice.
 > - While it's nice that slices grow automatically, it's far more efficient to size them once.
 >   If you know how many things you plan to put into a slices, create it with the correct initial capacity.
 >   You do that with the `make` function.
 > - When you take a slice from a slice, you are _not_ making a copy of the data.
 >   Instead, you now have two variables that are sharing memory.
 >   Changes to an element in a slice affect all slices that share that element.
+> - When should you use a map, and when should you use a slice? You should use slices for lists of data when data should
+>   be processed sequentially or the order of the elements is important. Maps are useful when you need to organize values
+>   using something other than an increasing integer value, such as a name.
+> - In Go, **order of map is random**. Go intentionally randomizes map iteration to prevent developers from relying on it.
+>   You have to use a slice of keys alongside the map for sorted order.
+> - Go provides the _comma ok idiom_ to tell the difference between a key that's associated with a zero value
+>   and a key that's not in the map. Go determines this at compile time based on the assignment context;
+>   specifically, how many variables are on the left-hand side.
+>   The compiler looks at what's on the left side of the assignment (if 1 variable generate the code to return 1 value;
+>   if 2 variables, generate the code to return 2 values). The comma ok idiom is used in Go when you want to differentiate
+>   between reading a value and getting back the zero value.
+> - When you have related data that you want to group together, you should define a `struct`.
+> - Go doesn't have classes, because it doesn't have inheritance. This doesn't mean Go doesn't have some of the features of
+>   object-oriented languages, it just does things a little differently.
+> - A struct type that's defined within a function can only be used within that function.
 
+```go
+// Parentheses = conversion
+// Type Conversion: []type(value)
+[]rune("hello")     // convert string → slice of runes
+[]byte("hello")     // convert string → slice of bytes
+int(3.14)           // convert float → int
+float64(42)         // convert int → float
+string([]rune{72})  // convert rune slice → string
 
-
+// Curly braces = create new slice
+// Literal Creation: []type{values}
+[]string{"hello", "world"}
+[]int{1, 2, 3}
+[]rune{'H', 'e', 'l', 'l', 'o'}
+[]byte{72, 101, 108}
+```
 
 ## Arrays -- Too Rigid to Use Directly
 - All elments in the array must be of the type that's specified.
@@ -644,14 +673,519 @@
 > using the functions in the `strings` and `unicode`/`uft8` packages in the standard library.  
 
 ## Maps
-### Reading and Writing a Map
-### The comma ok Idiom
-### Deleting from Maps
-### Emptying a Map
-### Comparing a Map
-### Using Maps
-### Using Maps as Sets
-## Structs
-### Anonymous Structs
-### Comparing and Converting Structs
+- Go provides a built-in data type for situations where you want to associate one value to another.
+  The `map` type is written as `map[keyType]valueType`.
+- You can declare a `map` using a `var` to create a map variable that's set to its zero value.
+  In this case (`var nilMap map[string]int`) `nilMap` is declared to be a map with `string` keys and `int` values.
+  The zero value for a map is `nil`. A `nil` map has a length of `0`. Attempting to read a `nil` map always returns
+  the zero value for the map's value type. However, _attempting to write to a `nil` map variable causes a panic._
+  ```go
+  // 
+	var nilMap map[string]int
+	fmt.Println(nilMap) // map[]
+	fmt.Println(nilMap["test"]) // 0 (notice no panic and returns zero value for int)
+  nilMap["test"] = 1 // panic: assignment to entry in nil map
 
+  ```
+- You can use a `:=` declaration to create a map variable by assigning it a _map literal_.
+  In this case, you are using an empty map literal. This is not the same as a `nil` map.
+  It has a length of `0`, but you can read and write to a map assigned an empty map literal.
+  ```go
+	teams := map[string]int{} // Initialize with an empty map literal
+	teams["test"] = 1
+	fmt.Println(teams) // map[test:1]
+	fmt.Println(teams["test"]) // 1
+  ```
+- Here is what a non-empty map literal looks like:
+  ```go
+	teams := map[string][]string{
+		"Orcas":   []string{"Fred", "Ralph", "Bijou"},
+		"Lions":   []string{"Sarah", "Peter", "Billie"},
+		"Kittens": []string{"Waldo", "Raul", "Ze"},
+	}
+	fmt.Println(teams)
+	fmt.Println(teams["Lions"])
+	fmt.Println(teams["test"])
+
+  // map[Kittens:[Waldo Raul Ze] Lions:[Sarah Peter Billie] Orcas:[Fred Ralph Bijou]]
+  // [Sarah Peter Billie]
+  // []
+  ```
+- A map literal's body is written as the key, followed by a colon (`:`), then the value.
+  A comma separates each key-value pair in the map, even on the last line.
+- If you know how many key-value pairs you intend to put in the map but don't know the exact values,
+  you can use `make` to create a map with a default size (capacity).
+- Maps created with `make` still have a length of `0`, and they can grow past the initially specified size (capacity).
+  ```go
+	ages := make(map[int][]string, 10)
+	fmt.Println(ages) // map[]
+	fmt.Println(ages[1]) // []
+
+	ages[1] = []string{"one"}
+	fmt.Println(ages, len(ages)) // map[1:[one]] 1
+  
+  // Maps in Go use a complex internal hash table structure.
+  // The concept of "capacity" doesn't translate cleanly to the outside.
+  // The capacity hint you pass to make is just an internal optimization; Go doesn't expose it back to you.
+  fmt.Println(cap(ages)) // invalid argument: ages (variable of type map[int][]string) for built-in cap
+  ```
+- Maps are like slices in several ways:
+  - Maps automatically grow as you add key-value pairs to them
+  - If you know how many key-value pairs you plan to insert into a map, you can use `make` to create a map
+    with a specific size (capacity)
+  - Passing a map to the `len` function tells you the number of key-value pairs in a map
+  - The zero value of a map is `nil`
+  - Maps are not comparable. You can check if they are equal to `nil`, but you _cannot_ check if two maps
+    have identical keys and values using `==` or differ using `!=`.
+- The key for a map can be any comparable type. This means _you cannot use a slice or a map as the key for a map_.
+- When should you use a map, and when should you use a slice? You should use slices for lists of data when data should
+  be processed sequentially or the order of the elements is important. Maps are useful when you need to organize values
+  using something other than an increasing integer value, such as a name.
+
+> [!WARNING]
+> In Go, order of map is random. Go intentionally randomizes map iteration to prevent developers from relying on it.
+> You have to use a slice of keys alongside the map for sorted order.
+
+### Reading and Writing a Map
+- You assign a value to a map key by putting the key within brackets and using `=` to specify the value,
+  and you read the value assigned to a map key by putting the key within brackets.
+  You cannot use `:=` to assign a value to a map key.
+  - When you try to read the value assigend to a mpa key that was never set,
+    the map returns the zero value for the map's value type. In this case, the value type is an `int`,
+    so you get back a `0`.
+  - You can use the `++` operator to increment the numeric value for a map key. Because a map returns its zero value by default,
+    this works even when there's no existing value associated with the key.
+  ```go
+	totalWins := map[string]int{}
+	totalWins["Orcas"] = 1
+	totalWins["Lions"] = 2
+
+	fmt.Println(totalWins["Orcas"]) // 1
+	fmt.Println(totalWins["Kittens"]) // 0
+
+	totalWins["Kittens"]++
+	fmt.Println(totalWins["Kittens"]) // 1
+
+	totalWins["Lions"] = 3
+	fmt.Println(totalWins["Lions"]) // 3
+  ```
+### The comma ok Idiom
+- A map returns the zero value if you ask for the value associated with a key that's not in the map.
+  Sometimes, you need to find if a key is in a map. Go provides the _comma ok idiom_ to tell the difference between
+  a key that's associated with a zero value and a key that's not in the map:
+  - Go determines this at compile time based on the assignment context;
+    specifically, how many variables are on the left-hand side.
+    The compiler looks at what's on the left side of the assignment (if 1 variable generate the code to return 1 value;
+    if 2 variables, generate the code to return 2 values).
+  ```go
+	m := map[string]int{
+		"hello": 5,
+		"world": 0,
+	}
+
+	v, ok := m["hello"]
+	fmt.Println(v, ok) // 5, true
+	fmt.Println(m["hello"]) // 5
+
+  v2 := m["hello"]
+  fmt.Prinln(v2) // 5
+
+	v, ok = m["world"]
+	fmt.Println(v, ok) // 0, true
+	fmt.Println(m["world"]) // 0
+
+	v, ok = m["goodbye"]
+	fmt.Println(v, ok) // 0, false
+	fmt.Println(m["goodbye"]) // 0
+  ```
+- Rather than assign the result of a map read to a single variable, with the comma ok idiom
+  you  assign the result of a map read to two variables. The first gets the value associated with the key.
+  The second value returned a `bool`. It is usually named `ok`.
+  - If `ok` is `true`, the key is present in the map.
+  - If `ok` is `false`, the key is not present.
+- The comma ok idiom is used in Go when you want to differentiate between reading a value and getting back the zero value.
+
+### Deleting from Maps
+- Key-value pairs are removed from a map via the built-in `delete` function
+  - The `delete` function takes a map and a key and then removes the key-value pair with the specified key.
+    If the key isn't present in the map or if the map is `nil`, nothing happens.
+    The `delete` function doesn't return a value.
+  ```go
+  	m := map[string]int{
+		"hello": 5,
+		"world": 10,
+	}
+	fmt.Println(m, len(m)) // map[hello:5 world:10] 2
+	delete(m, "hello")
+	fmt.Println(m, len(m)) // map[world:10] 1
+  ```
+
+### Emptying a Map
+- The `clear` function works on a map as well. A cleared map has its length set to zero, unlike a cleared slice
+  (which sets all values in the slice to their zero values).
+  ```go
+	m := map[string]int{
+		"hello": 5,
+		"world": 10,
+	}
+	fmt.Println(m, len(m)) // map[hello:5 world:10] 2
+	clear(m)
+	fmt.Println(m, len(m)) // map[] 0
+
+	s := []string{"hello", "world"}
+	s2 := []int{1, 2, 3, 4}
+	fmt.Println(s, len(s)) // [hello world] 2
+	fmt.Println(s2, len(s2)) // [1 2 3 4] 4
+	clear(s)
+	clear(s2)
+	fmt.Println(s, len(s)) // [  ] 2
+	fmt.Println(s2, len(s2)) // [0 0 0 0] 4
+  ```
+
+### Comparing a Map
+- There is a `maps` package in the standard library that has two useful functions for comparing if two maps are equal:
+  `maps.Equal` and `maps.EqualFunc` (they are analogous to `slices.Equal` and `slices.EqualFunc`).
+  ```go
+  	m := map[string]int{
+		"hello": 5,
+		"world": 10,
+	}
+	n := map[string]int{
+		"world": 10,
+		"hello": 5,
+	}
+	fmt.Println(maps.Equal(m, n)) // true
+  ```
+
+### Using Maps as Sets
+- Go doesn't include a set, but you can use a map to simulate some of its features
+  (see third party `golang-set` at github.com/deckarep/golang-set/v2 v2.8.0`).
+  Use the key of the map for the type you want to put into the set and use a `bool` for the value.
+  ```go
+	intSet := map[int]bool{}
+	vals := []int{5, 10, 2, 5, 8, 7, 3, 9, 1, 2, 10}
+	for _, v := range vals {
+		intSet[v] = true
+	}
+	fmt.Println(len(vals), len(intSet))
+	fmt.Println(intSet[5])
+	fmt.Println(intSet[50])
+	if intSet[100] {
+		fmt.Println("100 is in the set")
+	}
+	if intSet[10] {
+		fmt.Println("10 is in the set")
+	}
+	if !intSet[100] {
+		fmt.Println("100 is not in the set")
+	}
+
+  // 11 8
+  // true
+  // false
+  // 10 is in the set
+  // 100 is not in the set
+  ```
+- In the above, we want a set of `int`s, so we create a map where the keys are of `int` type and the values are `bool` type.
+  We iterate over the values in `vals` using a `for-range` loop to place them into `intSet`, associating each `int` with the
+  boolean value `true` (being a member of the set).
+- We wrote `11` values into `intSet`, but the length is `8`, because you cannot have duplicate keys in a map.
+- Looking for `50` or `100` returns `false` because it's not in `intSet`, which causes the map to return the zero value for the map
+  value, and the zero value for a `bool` is `false`.
+
+> [!NOTE]
+> Some people prefer to use `struct{}` for the value when a map is being used to implement a set. 
+> The advantage is that an empty struct uses zero bytes, while a boolean uses one byte.
+> The disadvantage is that using a `struct{}` makes your code clumsier.
+> You have a less obvious assignment, and you need to use the comma ok idiom to check if a value is in the set:
+> ```go
+> intSet := map[int]struct{}{}
+> vals := []int{5, 10, 2, 5, 8, 7, 3, 9, 1, 2, 10}
+> for _, v := range vals {
+> 	intSet[v] = struct{}{}
+> }
+> fmt.Println(len(vals), len(intSet))
+> fmt.Println(intSet[5])
+> fmt.Println(intSet[50])
+> if _, ok := intSet[5]; ok {
+> 	fmt.Println("5 is in the set")
+> }
+> if _, ok := intSet[50]; !ok {
+> 	fmt.Println("50 is not in the set")
+> }
+>
+> // 11 8
+> // {}
+> // {}
+> // 5 is in the set
+> // 50 is not in the set
+> ```
+
+## Structs
+- Maps are a convenient way to store some kind of data, but they have limitations.
+  They don't define an API since there's no way to constrain a map to allow only certain keys.
+  Also, all values in a map must be of _the same type_. For these reasons, maps are not an ideal way to pass data from
+  function to function. When you have related data that you want to group together, you should define a `struct`
+  (short for structure; think a class in Python).
+- Go doesn't have classes, because it doesn't have inheritance. This doesn't mean Go doesn't have some of the features of
+  object-oriented languages, it just does things a little differently.
+  ```go
+  type person struct {
+		name string
+		age  int
+		pet  string
+	}
+  ```
+- A struct type is defined with the keyword `type`, the name of the struct type, the keyword `struct`, and a pair of braces (`{}`).
+  Within the braces, you list the fields in the struct. Just as you put the variable name first
+  and the variable type second in a `var` declaration, you put the struct field name first and the struct field type second.
+  Also not that unlike in map literals, no commas separate the fields in a struct declaration.
+- You can declare a struct inside or outside of a function.
+  A struct type that's defined within a function can only be used within that function.
+- Once a struct type is declared, you can define variables of that type
+  - Here we are using a `var` declaration. Since no value is assigned to `fred`, it gets the zero value for the `person` struct type
+    A zero value struct has every field set to the field's zero value.
+  ```go
+  var fred person
+  fmt.Println(fred) // { 0 } (all zero values)
+  ```
+- A _struct literal_ can be assigned to a variable as well
+  ```go
+  bob := person{}
+  fmt.Println(bob) // { 0 } 
+  ```
+- Unlike maps, there is no difference between assigning an empty struct literal and not assigning a value at all.
+  Both initialize all fields in the struct to their zero values.
+  ```go
+  type person struct {
+      name string
+      age  int
+  }
+
+  var p1 person = person{}
+  var p2 person
+  fmt.Println(p1) // {"" 0 false}
+  fmt.Println(p2) // {"" 0 false}
+  fmt.Println(p1 == p2) // true — they are exactly the same
+  
+  // Empty map literal — creates a usable map
+  m1 := map[string]int{}
+  m1["hello"] = 5 // works fine
+
+  // No assignment — map is nil
+  var m2 map[string]int
+  m2["hello"] = 5 // PANIC! assignment to nil map
+  ```
+- There are two styles for a nonempty struct literal. First, a struct literal can be specified as a comma-separated list
+  of values for the fields inside of braces.
+  - When using this struct literal format, a value for every field in the struct must be specified,
+    and the values are assigned to fields in the order they were declared in the struct definition (order matters).
+  ```go
+  type person struct {
+		name string
+		age  int
+		pet  string
+	}
+	julia := person{
+		"Julia",
+		40,
+		"cat",
+	}
+	fmt.Println(julia) // {Julia 40 cat}
+  ```
+- The second style for a nonempty literal style looks like the map literal style.
+  - You use the name of the fields in the struct to specify the values.
+    This style has some advantages. It allows you to specify the fields in any order, and you don't need to provide
+    a value for all fields. Any field not specified is set to its zero value.
+  ```go
+  type person struct {
+		name string
+		age  int
+		pet  string
+	}
+	beth := person{
+		age:  30,
+		name: "Beth",
+	}
+	fmt.Println(beth) // {Beth 30 } (notice pets is "")
+  ```
+- You cannot mix the two struct literal styles: either all fields are specified with names, or none of them are.
+  - For small structs where all fields are always specified, the simpler struct literal style is fine.
+    In other cases, use names. It's more verbose, but it makes clear what value is being assigned to what field
+    without having to reference the struct definition. It's also more maintainable. If you initialize a struct without using
+    the field names and a future version of the struct adds additional fields, your code will no longer compile.
+- A field in a struct is accessed with dot annotation:
+  ```go
+  bob.name = "Bob"
+  fmt.Println(bob.name)
+  ```
+
+### Anonymous Structs
+- You can declare that a variable implements a struct type without first giving the struct type a name.
+  This is called an _anonymous struct_. In the below example, the types of variables `person` and `pet`
+  are anonymous structs. You can assign (and read) fields in an anonymous struct just as you do for a named struct type.
+  Just as you can initialize an instance of a named struct with a struct literal, you can do the same for an anonymous struct as well.
+  ```go
+  var person struct {
+		name string
+		age  int
+		pet  string
+	}
+	person.name = "bob"
+	person.age = 50
+	person.pet = "dog"
+
+	pet := struct {
+		name string
+		kind string
+	}{
+		name: "fido",
+		kind: "dog",
+	}
+	fmt.Println(person) // {bob 50 dog}
+	fmt.Println(pet) // {fido dog}
+  ```
+- Anonymous structs are handy in two common situations: (1) when you translate external data into a struct or a struct into
+  external data (like JSON or Protocol Buffers). This is called _unmarshalling_ (translated external into a struct) and 
+  _marshalling_ (translating a struct into external data) data. (2) Writing tests: you'll use a slice of anonymous structs
+  when writing table-driven tests.
+  ```go
+  // Example for JSON
+  // Instead of defining a named type...
+  type person struct {
+      Name string `json:"name"`
+      Age  int    `json:"age"`
+  }
+
+  // You can use an anonymous struct
+  person := struct {
+      Name string `json:"name"`
+      Age  int    `json:"age"`
+  }{
+      Name: "Alice",
+      Age:  30,
+  }
+  ```
+  ```go
+  // Unmarshalling (JSON to struct)
+  data := `{"name": "Alice", "age": 30, "email": "alice@example.com"}`
+
+  // Only extract the fields you care about
+  var result struct {
+      Name string `json:"name"`
+      Age  int    `json:"age"`
+  }
+
+  json.Unmarshal([]byte(data), &result)
+  fmt.Println(result.Name) // Alice
+  fmt.Println(result.Age)  // 30
+  // email is ignored since we didn't define a field for it
+  ```
+  ```go
+  // Marshalling (strcut to JSON)
+  data, _ := json.Marshal(struct {
+      Name  string `json:"name"`
+      Age   int    `json:"age"`
+      Admin bool   `json:"is_admin"`
+  }{
+      Name:  "Alice",
+      Age:   30,
+      Admin: true,
+  })
+
+  fmt.Println(string(data))
+  // {"name":"Alice","age":30,"is_admin":true}
+  ```
+
+### Comparing and Converting Structs
+- Whether a struct is comparable depends on the struct's fields. Structs that are entirely composed of comparable types are
+  comparable; those with slice or map fields are not.
+- Unlike Python, in Go there's no magic method that can be overridden to redefine equality and make `==` and `!=` work
+  for incomparable structs. You can write your own function that you use to compare structs.
+- Just as Go doesn't allow comparisons between variables of different primitive types, Go doesn't allow comparisons
+  between variables that represent structs of different types. Go does allow you to perform a type conversion from one
+  struct type to another _if the fields of both structs have the same names, order, and types_.
+- In the below example, you can use a type conversion to convert an instance of `firstPerson` to `secondPerson`,
+  but you can't use `==` to compare an instance of `firstPerson` and an instance of `secondPerson`, because they are different types.
+  - You can't convert an instance of `firstPerson` to `thirdPerson`, because the fields are in a different order.
+  - You can't convert an instance of `firstPerson` to `fourthPerson`, because the field names don't match.
+  - You can't convert an instance of `firstPerson` to `fifthPerson` because there's an additional field.
+  ```go
+  type firstPerson struct {
+		name string
+		age int
+	}
+	type secondPerson struct {
+		name string
+		age int
+	}
+	type thirdPerson struct {
+		age int
+		name string
+	}
+	type fourthPerson struct {
+		firstName string
+		age int
+	}
+	type fifthPerson struct {
+		name string
+		age int
+		favoriteColor string
+	}
+
+  f := firstPerson{name: "Alice", age: 30}
+	s := secondPerson{name: "Alice", age: 30}
+
+  converted := secondPerson(f)
+  fmt.Println(converted) // {Alice 30}
+  fmt.Println(converted == s) // true
+  fmt.Println(f == s) // invalid operation: f == s (mismatched types firstPerson and secondPerson)
+  ```
+- Anonymous structs add a small twist: if two struct variables are being compared and at least one has a type that's anonymous,
+  you can compare them without a type conversion if the fields of both structs have the same names, order, and types.
+  You can also assign between names and anonymous struct types if the fields of both structs have the same names, order, and types.
+  ```go
+  type firstPerson struct {
+		name string
+		age  int
+	}
+	f := firstPerson{
+		name: "bob",
+		age:  40,
+	}
+	var g struct {
+		name string
+		age  int
+	}
+	// compiles -- can use = and == between identical named and anonymous structs
+	g = f
+	fmt.Println(f == g) // true
+  ```
+- Said differently: Go relaxes its strict type rules when at least one of the structs is anonymous.
+  Two named types are always considered different (`firstPerson` and `secondPerson`), even if their fields are identical.
+  - The exception to this is anonymous structs.
+  - Named types have an explicit identity; `firstPerson` and `secondPerson` are distinct types by name,
+    even if structurally identical
+  - Anonymous structs have no name; they have no identity other than their structure, so Go just checks if the fields match.
+    The same rules about field names, order, and types still apply (can't be `age` then `name`, can't be `firstName`,
+    can't have `favoriteColor`).
+  ```go
+  type firstPerson struct {
+      name string
+      age  int
+  }
+
+  f := firstPerson{name: "bob", age: 40}
+
+  // g is an anonymous struct
+  var g struct {
+      name string
+      age  int
+  }
+
+  // Assignment works — no conversion needed!
+  g = f
+
+  // Comparison works — no conversion needed!
+  fmt.Println(f == g) // true
+  ```

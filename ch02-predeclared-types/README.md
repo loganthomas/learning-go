@@ -25,8 +25,6 @@
 >   package-level declaration to determine if the item is accessible outside of the package).
 > - Within a function, favor short variable names: _the smaller the scope for a variable, the shorter the name that's used for it_.
 
-
-
 ## The Predeclared Types
 - Go has many types built into the language. These are called _predeclared_ types 
   (booleans, integers, floats, and strings).

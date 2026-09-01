@@ -16,6 +16,7 @@
 >     - `go run myfile.go` will run directly without compiling to a binary
 >     - `go build myfile.go` and then `./myfile` will compile and then run the binary
 > - Use `go build -o bin/myproject` to compile to a `bin` directory that can easily be ignored by git.
+> - Can run via `go run .` as well
 
 
 ## Installing the Go Tools
