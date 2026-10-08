@@ -17,6 +17,22 @@
 >   to declare variables that are scoped to the condition and to both the `if` and `else` blocks.
 >   Consider using this convenience to keep variable scope as narrow as possible, which reduces the chance of accidentally
 >   using or shadowing later.
+> - `for` is the only looping keyword in the Go language. There are four formats: a complete, C-style `for`, a condition-only `for`,
+>   an infinite `for`, a `for-range`.
+> - The `for` statement has three parts: the initialization, the comparison (must return `bool`), the increment.
+>   Go allows you to leave off one or more but most commonly the initialization (value calculated before the loop)
+>   or increment (complicated inside the loop instead).
+> - Go encourages short `if` statement bodies, as left aligned as possible.
+>   Nested code is more difficult to understand and follow. Using a `continue` statement makes it
+>   easier to understand what's going on.
+> - The `for-range` format is for iterating over elements in some of Go's built-in types. You can use a `for-range` loop only
+>   to iterate over the built-in compound types and user-defined types that are based on them (things like strings, arrays,
+>   slices, maps, channels; but not int, struct). Think of this as "for each" loop. You get two loop variables:
+>   the first variable is the position in the data structure being iterated, while the second is the value at that position
+>   (think Python's `enumerate`).
+> - If you don't need access to the key, use an underscore (`_`) as the variables name. This tells Go to ignore that value.
+> - If you want the key, but don't want the value Go allows you to just leave off the second variable (`for k := range ...`) .
+
 
 
 
@@ -142,3 +158,201 @@
   ```
 - Be aware that just like any other block, a variable declared as part of an `if` statement will shadow variables with the same
   name that are declared in containing blocks.
+
+## `for`, Four Ways
+- `for` is the only looping keyword in the Go language. There are four formats:
+    - A complete, C-style `for`
+    - A condition-only `for`
+    - An infinite `for`
+    - `for-range`
+
+### The Complete `for` Statement (C-style)
+
+```go
+for i := 0; i < 10; i ++ {
+  fmt.Println(i)
+}
+
+// 0
+// 1
+// 2
+// 3
+// 4
+// 5
+// 6
+// 7
+// 8
+// 9
+```
+- The `for` statement does not use parentheses around its parts. It has three parts separated by a semicolon (`;`):
+    - The **initialization** that sets on or more variables before the loop begins (`i := 0`). You _must_ use `:=`
+      to initialize the variables; `var` is _not_ legal here. You can shadow a variable here.
+          - Because the `for` initialization requires `:=`, it always creates a _new_ variable, which
+            will shadow any same-named variable from an outer scope.
+            ```go
+            i := 10
+            fmt.Println(i) // prints 10
+
+            for i := 0; i < 5; i++ {
+                fmt.Println(i) // prints 0, 1, 2, 3, 4 — this is a NEW i, scoped to the loop
+            }
+
+            fmt.Println(i) // prints 10 — the outer i was never touched
+            ```
+    - The **comparison**. This must be an expression that evaluates to a `bool`. It is checked immediately _before_
+      each iteration of the loop. If the expression evaluates to `true`, the loop is executed. Here, it's the `i < 10`
+    - The **increment**. You usually see something like `i++` but any assignment is valid. It runs immediately after
+      each iteration of the loop, before the condition is evaluated.
+- Go allows you to leave out one or more of the three parts of the `for` statement.
+  Most commonly, you'll either leave off the initialization if it is based on a value calculated before the loop:
+  ```go
+  i := 0
+  for ; i < 10; i++ {
+    fmt.Println(i)
+  }
+  ```
+  or you'll leave off the increment because you have a more complicated increment rule _inside_ the loop:
+  ```go
+  for i := 0; i < 10; {
+    fmt.Println(i)
+    if i % 2 == 0 {
+      i ++
+    } else {
+      i+=2
+    }
+  }
+  ```
+
+### The Condition-Only `for` Statement
+- When you leave off _both_ the initialization and the increment in a `for` statement, do not include the semicolons.
+  This leaves a `for` statement that functions like a `while` loop in other languages.
+
+  ```go
+  i := 1
+
+  for i < 100 {
+    fmt.Println(i)
+    i = i * 2
+  }
+
+  // 1
+  // 2
+  // 4
+  // 8
+  // 16
+  // 32
+  // 64
+  ```
+
+### The Infinite `for` Statement 
+- The loop, removes the condition as well as the initialization and the increment.
+  ```go
+  package main
+
+  import "fmt"
+
+  func main() {
+    for {
+      fmt.Println("hello")
+    }
+  }
+  // hello
+  // hello
+  // hello
+  // hello
+  // hello
+  // hello
+  // hello
+  // ...
+  ```
+- How do you get out of an infinite `for` loop? `break`. It exists the loop immediately.
+- Go also includes the `continue` keyword, which skips over the rest of the `for` loop's body
+  and proceeds directly to the next iteration. Technically, you don't need a `continue` statement.
+  You _could_ write code like this:
+  ```go
+  import "fmt"
+
+  func main() {
+      for i := 1; i <= 100; i++ {
+          if i%3 == 0 {
+              if i%5 == 0 {
+                  fmt.Println("fizzbuzz")
+              } else {
+                  fmt.Println("fizz")
+              }
+          } else if i%5 == 0 {
+              fmt.Println("buzz")
+          } else {
+              fmt.Println(i)
+          }
+      }
+  }
+  ```
+- But this is not idiomatic! Go encourages short `if` statement bodies, as left aligned as possible.
+  Nested code is more difficult to understand and follow. Using a `continue` statement makes it
+  easier to understand what's going on.
+  ```go
+  import "fmt"
+
+  func main() {
+      for i := 1; i <= 100; i++ {
+          if i%3 == 0 && i%5 == 0 {
+              fmt.Println("fizzbuzz")
+              continue
+          }
+          if i%3 == 0 {
+              fmt.Println("fizz")
+              continue
+          }
+          if i%5 == 0 {
+              fmt.Println("buzz")
+              continue
+          }
+          fmt.Println(i)
+      }
+  }
+  ```
+- Replacing chains of `if`/`else` statements with a series of `if` statements that use `continue` makes the conditions line up.
+  This improves the layout of your conditions, which means your code is easier to read and understand.
+
+### The `for-range` Statement
+- The `for-range` format is for iterating over elements in some of Go's built-in types. You can use a `for-range` loop only
+  to iterate over the built-in compound types and user-defined types that are based on them (things like strings, arrays,
+  slices, maps, channels; but not int, struct). Think of this as "for each" loop.
+  ```go
+  // Example using a slice
+  evenVals := []int{2, 4, 6, 8, 10, 12}
+  for i, v := range evenVals {
+    fmt.Println(i, v)
+  }
+  // 0 2
+  // 1 4
+  // 2 6
+  // 3 8
+  // 4 10
+  // 5 12
+  ```
+- What makes a `for-range` loop interesting is that you get two loop variables. The first variable is the position in the data
+  structure being iterated, while the second is the value at that position (think Python's `enumerate`).
+    - The idiomatic names for the two loop variables depend on what is being looped over.
+    - For an array, slice, or string, an `i` for _index_ is commonly used and when iterating through a map, `k` for key is used instead.
+    - For the `v` value, single-letter variable names work well but for longer or more complex loops use a more descriptive name.
+- If you don't need access to the key, use an underscore (`_`) as the variables name. This tells Go to ignore that value.
+  ```go
+  evenVals := []int{2, 4, 6, 8, 10, 12}
+  for _, v := range evenVals {
+    fmt.Println(v)
+  }
+  ```
+- If you want the key, but don't want the value Go allows you to just leave off the second variable:
+  ```go
+  uniqueNames := map[string]bool{"Fred": true, "Raul": true, "Wilma": true}
+  for k := range uniqueNames {
+    fmt.Println(k)
+  }
+  // Fred
+  // Raul
+  // Wilma
+  ```
+
+
